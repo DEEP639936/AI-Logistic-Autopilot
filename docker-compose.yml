@@ -1,0 +1,29 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      # keep the DB on a named volume for persistence
+      DATABASE_PATH: /data/app.db
+    volumes:
+      - backend-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/api/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      API_PROXY_URL: http://backend:8000
+      AUTO_START_PY_BACKEND: "0"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  backend-data:

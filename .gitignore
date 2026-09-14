@@ -1,0 +1,26 @@
+# dependencies / builds
+node_modules/
+.next/
+out/
+dist/
+*.tsbuildinfo
+
+# python
+__pycache__/
+*.pyc
+.venv/
+
+# runtime data & secrets
+backend/data/
+*.db
+.env
+.env.local
+
+# logs
+*.log
+dev.log
+server.log
+
+# os
+.DS_Store
+Thumbs.db

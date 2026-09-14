@@ -1,0 +1,82 @@
+# =============================================================================
+# AI LOGISTICS AUTOPILOT — Centralized Threshold Configuration
+# Single source of truth for every business rule, scoring weight and alert
+# level. Values here are TEMPLATES; per-organization overrides are persisted
+# in the database (ThresholdConfig) with version history via the admin UI.
+# Secrets NEVER live here — they live in .env only.
+# =============================================================================
+
+config_version: "1.0.0"
+
+delay_risk:
+  medium_min: { value: 30, unit: "score", min: 10, max: 60, default: 30, description: "Score at/above which risk band becomes medium" }
+  high_min:   { value: 55, unit: "score", min: 30, max: 85, default: 55, description: "Score at/above which risk band becomes high" }
+  critical_min: { value: 75, unit: "score", min: 50, max: 100, default: 75, description: "Score at/above which risk band becomes critical" }
+  slack_alert_min: { value: 45, unit: "minutes", min: 0, max: 240, default: 45, description: "ETA slack below which a shipment is flagged at-risk" }
+
+sla:
+  on_time_buffer_min: { value: 30, unit: "minutes", min: 0, max: 180, default: 30, description: "Arrival within this buffer past ETA still counts as on-time" }
+  escalation_min: { value: 90, unit: "minutes", min: 15, max: 480, default: 90, description: "Delay beyond which an exception is escalated" }
+
+route_scoring_weights:   # must sum to 1.0
+  cost:     { value: 0.22, unit: "weight", min: 0, max: 1, default: 0.22, description: "Total trip cost weight" }
+  distance: { value: 0.12, unit: "weight", min: 0, max: 1, default: 0.12, description: "Distance weight" }
+  eta:      { value: 0.20, unit: "weight", min: 0, max: 1, default: 0.20, description: "ETA / transit time weight" }
+  traffic:  { value: 0.12, unit: "weight", min: 0, max: 1, default: 0.12, description: "Traffic exposure weight" }
+  weather:  { value: 0.10, unit: "weight", min: 0, max: 1, default: 0.10, description: "Weather risk weight" }
+  toll:     { value: 0.08, unit: "weight", min: 0, max: 1, default: 0.08, description: "Toll cost weight" }
+  fuel:     { value: 0.10, unit: "weight", min: 0, max: 1, default: 0.10, description: "Fuel cost weight" }
+  co2:      { value: 0.06, unit: "weight", min: 0, max: 1, default: 0.06, description: "Carbon weight" }
+
+assignment_weights:      # must sum to 1.0
+  capacity_fit: { value: 0.30, unit: "weight", min: 0, max: 1, default: 0.30, description: "Weight/volume fit quality" }
+  proximity:    { value: 0.25, unit: "weight", min: 0, max: 1, default: 0.25, description: "Distance of vehicle from pickup" }
+  availability: { value: 0.15, unit: "weight", min: 0, max: 1, default: 0.15, description: "Availability window fit" }
+  driver_hours: { value: 0.10, unit: "weight", min: 0, max: 1, default: 0.10, description: "Remaining driver duty hours" }
+  cost:         { value: 0.10, unit: "weight", min: 0, max: 1, default: 0.10, description: "Operating cost fit" }
+  utilization:  { value: 0.10, unit: "weight", min: 0, max: 1, default: 0.10, description: "Fleet utilization balancing" }
+
+return_load:
+  min_match_score: { value: 60, unit: "score", min: 0, max: 100, default: 60, description: "Matches below this score are hidden" }
+  max_detour_km:   { value: 120, unit: "km", min: 10, max: 500, default: 120, description: "Maximum accepted detour for a return load" }
+  min_profit_inr:  { value: 4000, unit: "INR", min: 0, max: 100000, default: 4000, description: "Minimum estimated profit to surface a match" }
+
+capacity_consolidation:
+  min_fill_pct:   { value: 70, unit: "%", min: 30, max: 100, default: 70, description: "Target fill before a group is proposed" }
+  max_wait_hrs:   { value: 12, unit: "hours", min: 1, max: 72, default: 12, description: "Shipments further apart than this are never grouped" }
+  max_group_size: { value: 4, unit: "shipments", min: 2, max: 8, default: 4, description: "Maximum shipments per consolidated load" }
+
+fuel_anomaly:
+  deviation_pct: { value: 18, unit: "%", min: 5, max: 60, default: 18, description: "Consumption above fleet baseline flagged as anomaly" }
+
+predictive_maintenance:
+  service_interval_km: { value: 20000, unit: "km", min: 5000, max: 50000, default: 20000, description: "Service interval per vehicle" }
+  warn_before_km:      { value: 1500, unit: "km", min: 100, max: 5000, default: 1500, description: "Warn when service due within this distance" }
+  health_warn_below:   { value: 70, unit: "score", min: 30, max: 95, default: 70, description: "Health score below which a vehicle is flagged" }
+
+disruption:
+  escalation_after_min: { value: 60, unit: "minutes", min: 10, max: 720, default: 60, description: "Auto-escalate open incidents after this many minutes (demo: steps)" }
+  critical_band_min:    { value: 80, unit: "score", min: 50, max: 100, default: 80, description: "Severity score at/above which an incident is critical" }
+
+ai_recommendations:
+  min_confidence:         { value: 0.55, unit: "ratio", min: 0, max: 1, default: 0.55, description: "Recommendations below this confidence are hidden" }
+  auto_approve_threshold: { value: 0.9, unit: "ratio", min: 0.5, max: 1, default: 0.9, description: "Confidence at/above which auto-approve may trigger" }
+  auto_approve_enabled:   { value: false, unit: "boolean", min: 0, max: 1, default: false, description: "Whether auto-approval is active for the org" }
+
+carbon_targets:
+  monthly_target_tons:     { value: 240, unit: "tons", min: 10, max: 5000, default: 240, description: "Monthly fleet CO2 target" }
+  diesel_kg_co2_per_litre: { value: 2.68, unit: "kg/l", min: 2, max: 3.5, default: 2.68, description: "Emission factor for diesel" }
+
+notifications:
+  max_attempts:       { value: 3, unit: "attempts", min: 1, max: 10, default: 3, description: "Max delivery attempts per notification" }
+  retry_interval_min: { value: 5, unit: "minutes", min: 1, max: 60, default: 5, description: "Base retry interval (exponential backoff)" }
+
+demo:
+  map_tick_seconds: { value: 15, unit: "seconds", min: 5, max: 120, default: 15, description: "Demo telemetry refresh interval" }
+  seed_vehicles:    { value: 32, unit: "vehicles", min: 5, max: 200, default: 32, description: "Vehicles per demo organization" }
+  seed_shipments:   { value: 160, unit: "shipments", min: 20, max: 1000, default: 160, description: "Shipments per demo organization" }
+
+feature_flags:
+  demo_simulator: { value: true, unit: "boolean", min: 0, max: 1, default: true, description: "Demo simulator (labelled) for live telemetry feel" }
+  copilot:        { value: true, unit: "boolean", min: 0, max: 1, default: true, description: "Logistics copilot panel" }
+  auto_approve:   { value: false, unit: "boolean", min: 0, max: 1, default: false, description: "Master switch for AI auto-approval" }
